@@ -2,7 +2,7 @@
 Replace Windows 11 Taskbar Auto-hide.
 
 
-##Features:
+## Features:
 
 
 1.Removes animation from Taskbar Autohide function.
@@ -11,7 +11,7 @@ Replace Windows 11 Taskbar Auto-hide.
 2.Adds a delay of set duration before the taskbar hides when the mouse is moved away from it. 'Default Is 5 Seconds.'
 
 
-##Preview:
+## Preview:
 
 
 
