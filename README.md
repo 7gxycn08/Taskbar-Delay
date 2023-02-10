@@ -15,5 +15,9 @@ Replace Windows 11 Taskbar Auto-hide.
 
 
 
-https://user-images.githubusercontent.com/121936658/218049859-55d35f9e-d5c9-4ebf-93d4-db6c5e84789a.mp4
+
+
+
+https://user-images.githubusercontent.com/121936658/218051708-6e9c0092-4097-4f0c-8087-2024568193a6.mp4
+
 
