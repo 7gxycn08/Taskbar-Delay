@@ -2,6 +2,14 @@ import ctypes
 import time
 from threading import Thread
 import queue
+import pynput
+
+win_pressed = False
+def on_win_press(key):
+    global win_pressed
+    if key == pynput.keyboard.Key.cmd:
+        show_taskbar()
+        win_pressed = True
 
 def show_taskbar():
     ctypes.windll.user32.ShowWindow(ctypes.windll.user32.FindWindowW("Shell_TrayWnd", None), 1)
@@ -27,19 +35,36 @@ def mouse_on_taskbar(q):
     else:
         q.put(False)
 
+def start_keyboard_listener():
+    with pynput.keyboard.Listener(on_press=on_win_press) as listener:
+        listener.join()
+
+Thread(target=start_keyboard_listener, daemon=True).start()
 mouse_in_bottom_region = False
+taskbar_visible = False
 q = queue.Queue()
 while True:
-    mouseontaskbar = Thread(target=lambda :mouse_on_taskbar(q), daemon=True)
-    mouseontaskbar.start()
+    mouse_on_taskbar(q)
     mouseon = q.get()
-    if mouseon:
-        Thread(target=show_taskbar(),daemon=True).start()
+    if win_pressed:
+        win_pressed = False
+        show_taskbar()
+        time.sleep(0.5)
+        continue
+    elif mouseon and taskbar_visible == True:
+        time.sleep(0.5)
+        continue
+    elif mouseon and not taskbar_visible:
+        show_taskbar()
         mouse_in_bottom_region = True
+        taskbar_visible = True
+        continue
     elif mouse_in_bottom_region:
-        time.sleep(5)
-        Thread(target=lambda: hide_taskbar(),daemon=True).start()
+        time.sleep(0.5)
+        hide_taskbar()
         mouse_in_bottom_region = False
+        taskbar_visible = False
+        continue
     else:
         hide_taskbar()
     time.sleep(0.1)
