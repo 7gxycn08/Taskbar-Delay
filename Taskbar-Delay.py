@@ -58,7 +58,7 @@ def start():
         if win_pressed:
             win_pressed = False
             show_taskbar()
-            time.sleep(0.5)
+            time.sleep(int(delay))
             continue
         elif mouse_on_q and taskbar_visible == True:
             time.sleep(int(delay))
@@ -69,7 +69,7 @@ def start():
             taskbar_visible = True
             continue
         elif mouse_in_bottom_region:
-            time.sleep(0.5)
+            time.sleep(int(delay))
             hide_taskbar()
             mouse_in_bottom_region = False
             taskbar_visible = False
