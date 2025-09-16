@@ -87,7 +87,6 @@ threading.Thread(target=start_keyboard_listener, daemon=True).start()
 mouse_in_bottom_region = False
 taskbar_visible = False
 queue = queue.Queue()
-threading.Thread(target=lambda: mouse_on_taskbar(queue), daemon=True).start()
 
 if __name__ == "__main__":
     start()
