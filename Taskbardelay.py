@@ -1,7 +1,6 @@
 import ctypes
 import threading
 import time
-import queue
 import pynput
 import configparser
 
@@ -28,20 +27,22 @@ def hide_taskbar():
         user32.ShowWindow(user32.FindWindowW("Shell_TrayWnd", None), 0)
         taskbar_hidden = True
 
-def mouse_on_taskbar(q):
-    global user32, point
-    user32.GetCursorPos(ctypes.byref(point))
-    x, y = point.x, point.y
+def mouse_on_taskbar():
+    global user32, point, queue
+    while True:
+        user32.GetCursorPos(ctypes.byref(point))
+        x, y = point.x, point.y
 
-    user32.GetSystemMetrics(0)
-    screen_height = user32.GetSystemMetrics(1)
+        user32.GetSystemMetrics(0)
+        screen_height = user32.GetSystemMetrics(1)
 
-    if y == screen_height - 1:
-        q.put(True)
-    elif screen_height - 40 < y < screen_height:
-        q.put(True)
-    else:
-        q.put(False)
+        if y == screen_height - 1:
+            queue = True
+        elif screen_height - 40 < y < screen_height:
+            queue = True
+        else:
+            queue = False
+        time.sleep(0.1)
 
 def start_keyboard_listener():
     with pynput.keyboard.Listener(on_press=on_win_press) as listener:
@@ -50,8 +51,7 @@ def start_keyboard_listener():
 def start():
     global win_pressed, taskbar_visible, mouse_in_bottom_region
     while True:
-        mouse_on_taskbar(queue)
-        mouse_on_q = queue.get()
+        mouse_on_q = queue
         if win_pressed:
             win_pressed = False
             show_taskbar()
@@ -86,7 +86,8 @@ user32 = ctypes.WinDLL('user32.dll')
 threading.Thread(target=start_keyboard_listener, daemon=True).start()
 mouse_in_bottom_region = False
 taskbar_visible = False
-queue = queue.Queue()
+queue = None
+threading.Thread(target=lambda: mouse_on_taskbar(), daemon=True).start()
 
 if __name__ == "__main__":
     start()
