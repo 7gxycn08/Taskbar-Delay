@@ -17,7 +17,7 @@ Replace Windows 11 Taskbar Auto-hide.
 The Preview video is set to `5 seconds delay.`
 
 
-## Features:
+## Usage:
 
 
 1.Make sure to disable hide taskbar automatically from windows.
