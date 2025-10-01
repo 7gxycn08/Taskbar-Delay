@@ -3,12 +3,26 @@ import threading
 import time
 import pynput
 import configparser
+from ctypes import wintypes
 
 win_pressed = False
 taskbar_hidden = None
 config = configparser.ConfigParser()
 config.read('Config.ini')
 delay = config['MainConfig']['delay']
+ABM_SETSTATE = 10
+ABS_AUTOHIDE = 1
+ABS_ALWAYSONTOP = 2
+
+class APPBARDATA(ctypes.Structure):
+    _fields_ = [
+        ("cbSize", wintypes.DWORD),
+        ("hWnd", wintypes.HWND),
+        ("uCallbackMessage", wintypes.UINT),
+        ("uEdge", wintypes.UINT),
+        ("rc", wintypes.RECT),
+        ("lParam", wintypes.LONG),
+    ]
 
 def on_win_press(key):
     global win_pressed
@@ -18,13 +32,29 @@ def on_win_press(key):
 
 def show_taskbar():
     global taskbar_hidden, user32
-    user32.ShowWindow(user32.FindWindowW("Shell_TrayWnd", None), 1)
+    taskbar = user32.FindWindowW("Shell_TrayWnd", None)
+    if taskbar:
+        abd = APPBARDATA()
+        abd.cbSize = ctypes.sizeof(APPBARDATA)
+        abd.hWnd = taskbar
+
+        # Show taskbar
+        abd.lParam = ABS_ALWAYSONTOP  # normal visible
+        shell32.SHAppBarMessage(ABM_SETSTATE, ctypes.byref(abd))
     taskbar_hidden = False
 
 def hide_taskbar():
     global taskbar_hidden, user32
     if not taskbar_hidden:
-        user32.ShowWindow(user32.FindWindowW("Shell_TrayWnd", None), 0)
+        taskbar = user32.FindWindowW("Shell_TrayWnd", None)
+        if taskbar:
+            abd = APPBARDATA()
+            abd.cbSize = ctypes.sizeof(APPBARDATA)
+            abd.hWnd = taskbar
+
+            # Hide taskbar (like auto-hide engages)
+            abd.lParam = ABS_AUTOHIDE
+            shell32.SHAppBarMessage(ABM_SETSTATE, ctypes.byref(abd))
         taskbar_hidden = True
 
 def mouse_on_taskbar():
@@ -83,6 +113,7 @@ class POINT(ctypes.Structure):
 
 point = POINT()
 user32 = ctypes.WinDLL('user32.dll')
+shell32 = ctypes.WinDLL("shell32")
 threading.Thread(target=start_keyboard_listener, daemon=True).start()
 mouse_in_bottom_region = False
 taskbar_visible = False
