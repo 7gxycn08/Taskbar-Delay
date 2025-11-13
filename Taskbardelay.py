@@ -3,26 +3,20 @@ import threading
 import time
 import pynput
 import configparser
-from ctypes import wintypes
+import win32gui
 
 win_pressed = False
 taskbar_hidden = None
 config = configparser.ConfigParser()
 config.read('Config.ini')
 delay = config['MainConfig']['delay']
-ABM_SETSTATE = 10
-ABS_AUTOHIDE = 1
-ABS_ALWAYSONTOP = 2
 
-class APPBARDATA(ctypes.Structure):
-    _fields_ = [
-        ("cbSize", wintypes.DWORD),
-        ("hWnd", wintypes.HWND),
-        ("uCallbackMessage", wintypes.UINT),
-        ("uEdge", wintypes.UINT),
-        ("rc", wintypes.RECT),
-        ("lParam", wintypes.LONG),
-    ]
+#noinspection SpellCheckingInspection
+def enum_handler(hwnd, hwnds):
+    class_name = win32gui.GetClassName(hwnd)
+    if class_name in ("Shell_TrayWnd", "Shell_SecondaryTrayWnd"):
+        hwnds.append((hwnd, class_name))
+    return True
 
 def on_win_press(key):
     global win_pressed
@@ -32,29 +26,21 @@ def on_win_press(key):
 
 def show_taskbar():
     global taskbar_hidden, user32
-    taskbar = user32.FindWindowW("Shell_TrayWnd", None)
-    if taskbar:
-        abd = APPBARDATA()
-        abd.cbSize = ctypes.sizeof(APPBARDATA)
-        abd.hWnd = taskbar
-
-        # Show taskbar
-        abd.lParam = ABS_ALWAYSONTOP  # normal visible
-        shell32.SHAppBarMessage(ABM_SETSTATE, ctypes.byref(abd))
+    #noinspection SpellCheckingInspection
+    hwnds = []
+    win32gui.EnumWindows(enum_handler, hwnds)
+    for hwnd, cls in hwnds:
+        user32.ShowWindow(user32.FindWindowW(cls, None), 5)
     taskbar_hidden = False
 
 def hide_taskbar():
     global taskbar_hidden, user32
     if not taskbar_hidden:
-        taskbar = user32.FindWindowW("Shell_TrayWnd", None)
-        if taskbar:
-            abd = APPBARDATA()
-            abd.cbSize = ctypes.sizeof(APPBARDATA)
-            abd.hWnd = taskbar
-
-            # Hide taskbar (like auto-hide engages)
-            abd.lParam = ABS_AUTOHIDE
-            shell32.SHAppBarMessage(ABM_SETSTATE, ctypes.byref(abd))
+        # noinspection SpellCheckingInspection
+        hwnds = []
+        win32gui.EnumWindows(enum_handler, hwnds)
+        for hwnd, cls in hwnds:
+            user32.ShowWindow(user32.FindWindowW(cls, None), 0)
         taskbar_hidden = True
 
 def mouse_on_taskbar():
@@ -113,7 +99,6 @@ class POINT(ctypes.Structure):
 
 point = POINT()
 user32 = ctypes.WinDLL('user32.dll')
-shell32 = ctypes.WinDLL("shell32")
 threading.Thread(target=start_keyboard_listener, daemon=True).start()
 mouse_in_bottom_region = False
 taskbar_visible = False
