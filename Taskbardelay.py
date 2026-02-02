@@ -26,20 +26,19 @@ def fade_out(hwnd):
         ex_style | WS_EX_LAYERED
     )
 
-    # set 50% transparency
-    count = 255
-    while True:
-        new_count = count - 1
+    steps = 60  # “frames”
+    duration = 1.5  # seconds
+    sleep = duration / steps
+
+    for i in range(steps, -1, -1):
+        alpha = int(255 * i / steps)
         user32.SetLayeredWindowAttributes(
             hwnd,
-            0,  # color key (unused here)
-            new_count,  # alpha: 0–255 (128 = 50%)
+            0,
+            alpha,
             LWA_ALPHA
         )
-        count = new_count
-        time.sleep(0.01)
-        if count == 0:
-            break
+        time.sleep(sleep)
 
 def fade_in(hwnd):
     # get current extended style
@@ -52,20 +51,19 @@ def fade_in(hwnd):
         ex_style | WS_EX_LAYERED
     )
 
-    # set 50% transparency
-    count = 0
-    while True:
-        new_count = count + 1
+    steps = 60  # “frames”
+    duration = 1.5  # seconds
+    sleep = duration / steps
+
+    for i in range(0, steps + 1):
+        alpha = int(255 * i / steps)
         user32.SetLayeredWindowAttributes(
             hwnd,
-            0,  # color key (unused here)
-            new_count,  # alpha: 0–255 (128 = 50%)
+            0,
+            alpha,
             LWA_ALPHA
         )
-        count = new_count
-        time.sleep(0.01)
-        if count == 255:
-            break
+        time.sleep(sleep)
 
 #noinspection SpellCheckingInspection
 def enum_handler(hwnd, hwnds):
