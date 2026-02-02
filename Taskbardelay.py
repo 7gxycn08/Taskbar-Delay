@@ -10,6 +10,62 @@ taskbar_hidden = None
 config = configparser.ConfigParser()
 config.read('Config.ini')
 delay = config['MainConfig']['delay']
+#noinspection SpellCheckingInspection
+GWL_EXSTYLE = -20
+WS_EX_LAYERED = 0x00080000
+LWA_ALPHA = 0x2
+
+def fade_out(hwnd):
+    # get current extended style
+    ex_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+
+    # enable layered window style
+    user32.SetWindowLongW(
+        hwnd,
+        GWL_EXSTYLE,
+        ex_style | WS_EX_LAYERED
+    )
+
+    # set 50% transparency
+    count = 255
+    while True:
+        new_count = count - 1
+        user32.SetLayeredWindowAttributes(
+            hwnd,
+            0,  # color key (unused here)
+            new_count,  # alpha: 0–255 (128 = 50%)
+            LWA_ALPHA
+        )
+        count = new_count
+        time.sleep(0.01)
+        if count == 0:
+            break
+
+def fade_in(hwnd):
+    # get current extended style
+    ex_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+
+    # enable layered window style
+    user32.SetWindowLongW(
+        hwnd,
+        GWL_EXSTYLE,
+        ex_style | WS_EX_LAYERED
+    )
+
+    # set 50% transparency
+    count = 0
+    while True:
+        new_count = count + 1
+        user32.SetLayeredWindowAttributes(
+            hwnd,
+            0,  # color key (unused here)
+            new_count,  # alpha: 0–255 (128 = 50%)
+            LWA_ALPHA
+        )
+        count = new_count
+        time.sleep(0.01)
+        if count == 255:
+            break
 
 #noinspection SpellCheckingInspection
 def enum_handler(hwnd, hwnds):
@@ -30,7 +86,7 @@ def show_taskbar():
     hwnds = []
     win32gui.EnumWindows(enum_handler, hwnds)
     for hwnd, cls in hwnds:
-        user32.ShowWindow(user32.FindWindowW(cls, None), 5)
+        fade_in(hwnd)
     taskbar_hidden = False
 
 def hide_taskbar():
@@ -40,7 +96,7 @@ def hide_taskbar():
         hwnds = []
         win32gui.EnumWindows(enum_handler, hwnds)
         for hwnd, cls in hwnds:
-            user32.ShowWindow(user32.FindWindowW(cls, None), 0)
+            fade_out(hwnd)
         taskbar_hidden = True
 
 def mouse_on_taskbar():
