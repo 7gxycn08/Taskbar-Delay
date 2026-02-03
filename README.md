@@ -14,9 +14,6 @@ Replace Windows 11 Taskbar Auto-hide.
 3.To adjust how long the task bar will be visible before hiding edit `Config.ini delay value` and set it to the desired value in seconds.
 
 
-4.Set `fade_rounded` to `True` to enable Taskbar fade in/out effect and rounded corners.
-
-
 The Preview video is set to `5 seconds delay.`
 
 
@@ -26,7 +23,15 @@ The Preview video is set to `5 seconds delay.`
 1.Make sure to disable hide taskbar automatically from windows.
 
 
-2.Run `taskbardelay` manually or automatically using windows task scheduler. 
+2.Configure settings `config.ini`.
+
+3.`delay` value in seconds between hiding taskbar.
+
+
+4.`fade_rounded` to `True` to enable Taskbar fade in/out effect and rounded corners `False` to disable.
+
+
+5.Run `taskbardelay` manually or automatically using windows task scheduler. 
 
 
 ## Preview:
