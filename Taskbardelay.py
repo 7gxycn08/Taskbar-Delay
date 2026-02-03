@@ -10,10 +10,33 @@ taskbar_hidden = None
 config = configparser.ConfigParser()
 config.read('Config.ini')
 delay = config['MainConfig']['delay']
+fade = config.getboolean('MainConfig', 'fade_rounded')
 #noinspection SpellCheckingInspection
 GWL_EXSTYLE = -20
 WS_EX_LAYERED = 0x00080000
 LWA_ALPHA = 0x2
+# noinspection SpellCheckingInspection
+DWMWA_WINDOW_CORNER_PREFERENCE = 33
+
+
+def reset_fade(hwnd, cls):
+    user32.ShowWindow(user32.FindWindowW(cls, None), 5)
+    # get current extended style
+    ex_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+
+    # enable layered window style
+    user32.SetWindowLongW(
+        hwnd,
+        GWL_EXSTYLE,
+        ex_style | WS_EX_LAYERED
+    )
+    user32.SetLayeredWindowAttributes(
+        hwnd,
+        0,
+        255,
+        LWA_ALPHA
+    )
+
 
 def fade_out(hwnd):
     # get current extended style
@@ -40,6 +63,7 @@ def fade_out(hwnd):
         )
         time.sleep(sleep)
 
+
 def fade_in(hwnd):
     # get current extended style
     ex_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
@@ -65,6 +89,19 @@ def fade_in(hwnd):
         )
         time.sleep(sleep)
 
+
+def round_taskbar(hwnd, dwm_wcp_round):
+    # Find the taskbar window
+    preference = ctypes.c_int(dwm_wcp_round)
+
+    dwmapi.DwmSetWindowAttribute(
+        hwnd,
+        DWMWA_WINDOW_CORNER_PREFERENCE,
+        ctypes.byref(preference),
+        ctypes.sizeof(preference)
+    )
+
+
 #noinspection SpellCheckingInspection
 def enum_handler(hwnd, hwnds):
     class_name = win32gui.GetClassName(hwnd)
@@ -72,11 +109,13 @@ def enum_handler(hwnd, hwnds):
         hwnds.append((hwnd, class_name))
     return True
 
+
 def on_win_press(key):
     global win_pressed
     if key == pynput.keyboard.Key.cmd:
         show_taskbar()
         win_pressed = True
+
 
 def show_taskbar():
     global taskbar_hidden, user32
@@ -84,8 +123,14 @@ def show_taskbar():
     hwnds = []
     win32gui.EnumWindows(enum_handler, hwnds)
     for hwnd, cls in hwnds:
-        fade_in(hwnd)
+        if fade:
+            fade_in(hwnd)
+            round_taskbar(hwnd, 2)
+        else:
+            round_taskbar(hwnd, 0)
+            user32.ShowWindow(user32.FindWindowW(cls, None), 5)
     taskbar_hidden = False
+
 
 def hide_taskbar():
     global taskbar_hidden, user32
@@ -94,8 +139,14 @@ def hide_taskbar():
         hwnds = []
         win32gui.EnumWindows(enum_handler, hwnds)
         for hwnd, cls in hwnds:
-            fade_out(hwnd)
+            if fade:
+                fade_out(hwnd)
+                round_taskbar(hwnd, 2)
+            else:
+                round_taskbar(hwnd, 0)
+                user32.ShowWindow(user32.FindWindowW(cls, None), 0)
         taskbar_hidden = True
+
 
 def mouse_on_taskbar():
     global user32, point, queue
@@ -114,9 +165,11 @@ def mouse_on_taskbar():
             queue = False
         time.sleep(0.1)
 
+
 def start_keyboard_listener():
     with pynput.keyboard.Listener(on_press=on_win_press) as listener:
         listener.join()
+
 
 def start():
     global win_pressed, taskbar_visible, mouse_in_bottom_region
@@ -153,11 +206,18 @@ class POINT(ctypes.Structure):
 
 point = POINT()
 user32 = ctypes.WinDLL('user32.dll')
+# noinspection SpellCheckingInspection
+dwmapi = ctypes.WinDLL("dwmapi.dll")
 threading.Thread(target=start_keyboard_listener, daemon=True).start()
 mouse_in_bottom_region = False
 taskbar_visible = False
 queue = None
 threading.Thread(target=lambda: mouse_on_taskbar(), daemon=True).start()
+# noinspection SpellCheckingInspection
+hwnd_s = []
+win32gui.EnumWindows(enum_handler, hwnd_s)
+for hwn_d, cl_s in hwnd_s:
+    reset_fade(hwn_d, cl_s)
 
 if __name__ == "__main__":
     start()
