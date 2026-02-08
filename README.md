@@ -28,7 +28,10 @@ The Preview video is set to `5 seconds delay.`
 3.`delay` value in seconds between hiding taskbar.
 
 
-4.`fade_rounded` to `True` to enable Taskbar fade in/out effect and rounded corners `False` to disable.
+4.`fade_in_out` to `True` to enable Taskbar fade in/out effect. `False` to disable.
+
+
+5.`rounded_corners` to `True` to enable rounded taskbar. `False` to disable.
 
 
 5.Run `taskbardelay` manually or automatically using windows task scheduler. 
