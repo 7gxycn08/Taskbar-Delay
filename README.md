@@ -8,7 +8,7 @@ Replace Windows 11 Taskbar Auto-hide.
 1.Adds fade in/out and rounded corners for Taskbar Autohide function.
 
 
-2.Adds a delay of set duration before the taskbar hides when the mouse is moved away from it. `Default Is 0.5 Seconds.`
+2.Adds a delay of set duration before the taskbar hides when the mouse is moved away from it.
 
 
 3.To adjust how long the task bar will be visible before hiding edit `Config.ini delay value` and set it to the desired value in seconds.
