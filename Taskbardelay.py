@@ -10,7 +10,9 @@ taskbar_hidden = None
 config = configparser.ConfigParser()
 config.read('Config.ini')
 delay = config['MainConfig']['delay']
-fade = config.getboolean('MainConfig', 'fade_rounded')
+fade = config.getboolean('MainConfig', 'fade_in_out')
+rounded = config.getboolean('MainConfig', 'rounded_corners')
+mouse_count = 0
 #noinspection SpellCheckingInspection
 GWL_EXSTYLE = -20
 WS_EX_LAYERED = 0x00080000
@@ -50,7 +52,7 @@ def fade_out(hwnd):
     )
 
     steps = 60  # “frames”
-    duration = 1.5  # seconds
+    duration = 0.5  # seconds
     sleep = duration / steps
 
     for i in range(steps, -1, -1):
@@ -76,7 +78,7 @@ def fade_in(hwnd):
     )
 
     steps = 60  # “frames”
-    duration = 1.5  # seconds
+    duration = 0.5  # seconds
     sleep = duration / steps
 
     for i in range(0, steps + 1):
@@ -125,9 +127,7 @@ def show_taskbar():
     for hwnd, cls in hwnds:
         if fade:
             fade_in(hwnd)
-            round_taskbar(hwnd, 2)
         else:
-            round_taskbar(hwnd, 0)
             user32.ShowWindow(user32.FindWindowW(cls, None), 5)
     taskbar_hidden = False
 
@@ -141,9 +141,7 @@ def hide_taskbar():
         for hwnd, cls in hwnds:
             if fade:
                 fade_out(hwnd)
-                round_taskbar(hwnd, 2)
             else:
-                round_taskbar(hwnd, 0)
                 user32.ShowWindow(user32.FindWindowW(cls, None), 0)
         taskbar_hidden = True
 
@@ -159,7 +157,7 @@ def mouse_on_taskbar():
 
         if y == screen_height - 1:
             queue = True
-        elif screen_height - 40 < y < screen_height:
+        elif screen_height - 55 < y < screen_height:
             queue = True
         else:
             queue = False
@@ -172,7 +170,7 @@ def start_keyboard_listener():
 
 
 def start():
-    global win_pressed, taskbar_visible, mouse_in_bottom_region
+    global win_pressed, taskbar_visible, mouse_in_bottom_region, mouse_count
     while True:
         mouse_on_q = queue
         if win_pressed:
@@ -184,18 +182,22 @@ def start():
             time.sleep(int(delay))
             continue
         elif mouse_on_q and not taskbar_visible:
-            show_taskbar()
-            mouse_in_bottom_region = True
-            taskbar_visible = True
+            mouse_count += 1
+            if mouse_count == 3:
+                show_taskbar()
+                mouse_in_bottom_region = True
+                taskbar_visible = True
             continue
         elif mouse_in_bottom_region:
             time.sleep(int(delay))
             hide_taskbar()
+            mouse_count = 0
             mouse_in_bottom_region = False
             taskbar_visible = False
             continue
         else:
             hide_taskbar()
+            mouse_count = 0
         time.sleep(0.1)
 
 
@@ -218,6 +220,15 @@ hwnd_s = []
 win32gui.EnumWindows(enum_handler, hwnd_s)
 for hwn_d, cl_s in hwnd_s:
     reset_fade(hwn_d, cl_s)
+
+if rounded:
+    win32gui.EnumWindows(enum_handler, hwnd_s)
+    for hwn_d, cl_s in hwnd_s:
+        round_taskbar(hwn_d, 2)
+else:
+    win32gui.EnumWindows(enum_handler, hwnd_s)
+    for hwn_d, cl_s in hwnd_s:
+        round_taskbar(hwn_d, 0)
 
 if __name__ == "__main__":
     start()
