@@ -125,6 +125,8 @@ def show_taskbar():
     hwnds = []
     win32gui.EnumWindows(enum_handler, hwnds)
     for hwnd, cls in hwnds:
+        if rounded:
+            round_taskbar(hwnd, 2)
         if fade:
             fade_in(hwnd)
         else:
