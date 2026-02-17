@@ -166,6 +166,21 @@ def mouse_on_taskbar():
         time.sleep(0.1)
 
 
+def hide_check():
+    user32.GetCursorPos(ctypes.byref(point))
+    x, y = point.x, point.y
+
+    user32.GetSystemMetrics(0)
+    screen_height = user32.GetSystemMetrics(1)
+
+    if y == screen_height - 1:
+        return True
+    elif screen_height - 55 < y < screen_height:
+        return True
+    else:
+        return False
+
+
 def start_keyboard_listener():
     with pynput.keyboard.Listener(on_press=on_win_press) as listener:
         listener.join()
@@ -192,14 +207,18 @@ def start():
             continue
         elif mouse_in_bottom_region:
             time.sleep(int(delay))
-            hide_taskbar()
-            mouse_count = 0
-            mouse_in_bottom_region = False
-            taskbar_visible = False
+            check = hide_check()
+            if not check:
+                hide_taskbar()
+                mouse_count = 0
+                mouse_in_bottom_region = False
+                taskbar_visible = False
             continue
         else:
             hide_taskbar()
             mouse_count = 0
+            mouse_in_bottom_region = False
+            taskbar_visible = False
         time.sleep(0.1)
 
 
