@@ -4,6 +4,7 @@ import time
 import pynput
 import configparser
 import win32gui
+from ctypes import wintypes
 
 win_pressed = False
 taskbar_hidden = None
@@ -94,6 +95,10 @@ def fade_in(hwnd):
 
 def round_taskbar(hwnd, dwm_wcp_round):
     # Find the taskbar window
+    if dwm_wcp_round == 2 and get_window_corner_preference(hwnd) == 2:
+        return
+    if dwm_wcp_round == 0 and get_window_corner_preference(hwnd) == 0:
+        return
     preference = ctypes.c_int(dwm_wcp_round)
 
     dwmapi.DwmSetWindowAttribute(
@@ -127,6 +132,8 @@ def show_taskbar():
     for hwnd, cls in hwnds:
         if rounded:
             round_taskbar(hwnd, 2)
+        else:
+            round_taskbar(hwnd, 0)
         if fade:
             fade_in(hwnd)
         else:
@@ -220,6 +227,18 @@ def start():
             mouse_in_bottom_region = False
             taskbar_visible = False
         time.sleep(0.1)
+
+
+def get_window_corner_preference(hwnd):
+    preference = ctypes.c_int()
+
+    dwmapi.DwmGetWindowAttribute(
+        wintypes.HWND(hwnd),
+        DWMWA_WINDOW_CORNER_PREFERENCE,
+        ctypes.byref(preference),
+        ctypes.sizeof(preference)
+    )
+    return preference.value
 
 
 class POINT(ctypes.Structure):
