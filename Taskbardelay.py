@@ -7,7 +7,6 @@ import win32gui
 from ctypes import wintypes
 
 win_pressed = False
-taskbar_hidden = None
 config = configparser.ConfigParser()
 config.read('Config.ini')
 delay = config['MainConfig']['delay']
@@ -79,7 +78,7 @@ def fade_in(hwnd):
     )
 
     steps = 60  # “frames”
-    duration = 0.5  # seconds
+    duration = 0.1  # seconds
     sleep = duration / steps
 
     for i in range(0, steps + 1):
@@ -125,25 +124,27 @@ def on_win_press(key):
 
 
 def show_taskbar():
-    global taskbar_hidden, user32
-    #noinspection SpellCheckingInspection
-    hwnds = []
-    win32gui.EnumWindows(enum_handler, hwnds)
-    for hwnd, cls in hwnds:
-        if rounded:
-            round_taskbar(hwnd, 2)
-        else:
-            round_taskbar(hwnd, 0)
-        if fade:
-            fade_in(hwnd)
-        else:
-            user32.ShowWindow(user32.FindWindowW(cls, None), 5)
-    taskbar_hidden = False
+    global taskbar_visible, user32
+    if not taskbar_visible:
+        # noinspection SpellCheckingInspection
+        hwnds = []
+        win32gui.EnumWindows(enum_handler, hwnds)
+        for hwnd, cls in hwnds:
+            if rounded:
+                round_taskbar(hwnd, 2)
+            else:
+                round_taskbar(hwnd, 0)
+            if fade:
+                fade_in(hwnd)
+            else:
+                user32.ShowWindow(user32.FindWindowW(cls, None), 5)
+                user32.SetForegroundWindow(hwnd)
+        taskbar_visible = True
 
 
 def hide_taskbar():
-    global taskbar_hidden, user32
-    if not taskbar_hidden:
+    global taskbar_visible, user32
+    if taskbar_visible:
         # noinspection SpellCheckingInspection
         hwnds = []
         win32gui.EnumWindows(enum_handler, hwnds)
@@ -152,7 +153,7 @@ def hide_taskbar():
                 fade_out(hwnd)
             else:
                 user32.ShowWindow(user32.FindWindowW(cls, None), 0)
-        taskbar_hidden = True
+        taskbar_visible = False
 
 
 def mouse_on_taskbar():
@@ -199,7 +200,9 @@ def start():
         mouse_on_q = queue
         if win_pressed:
             win_pressed = False
-            show_taskbar()
+            if not taskbar_visible:
+                show_taskbar()
+                taskbar_visible = True
             time.sleep(int(delay))
             continue
         elif mouse_on_q and taskbar_visible == True:
@@ -252,7 +255,7 @@ user32 = ctypes.WinDLL('user32.dll')
 dwmapi = ctypes.WinDLL("dwmapi.dll")
 threading.Thread(target=start_keyboard_listener, daemon=True).start()
 mouse_in_bottom_region = False
-taskbar_visible = False
+taskbar_visible = True
 queue = None
 threading.Thread(target=lambda: mouse_on_taskbar(), daemon=True).start()
 # noinspection SpellCheckingInspection
@@ -271,4 +274,5 @@ else:
         round_taskbar(hwn_d, 0)
 
 if __name__ == "__main__":
+    hide_taskbar()
     start()
