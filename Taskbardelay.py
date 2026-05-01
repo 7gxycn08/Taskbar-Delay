@@ -23,6 +23,7 @@ DWMWA_WINDOW_CORNER_PREFERENCE = 33
 
 def reset_fade(hwnd, cls):
     user32.ShowWindow(user32.FindWindowW(cls, None), 5)
+    user32.SetForegroundWindow(hwnd)
     # get current extended style
     ex_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
 
