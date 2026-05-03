@@ -118,15 +118,17 @@ def enum_handler(hwnd, hwnds):
 
 
 def on_win_press(key):
-    global win_pressed
+    global win_pressed, taskbar_visible
     if key == pynput.keyboard.Key.cmd:
         show_taskbar()
+        taskbar_visible = True
         win_pressed = True
 
 
 def show_taskbar():
     global taskbar_visible, user32
-    if not taskbar_visible:
+    # noinspection PySimplifyBooleanCheck
+    if taskbar_visible is False:
         # noinspection SpellCheckingInspection
         hwnds = []
         win32gui.EnumWindows(enum_handler, hwnds)
@@ -145,7 +147,8 @@ def show_taskbar():
 
 def hide_taskbar():
     global taskbar_visible, user32
-    if taskbar_visible:
+    # noinspection PySimplifyBooleanCheck
+    if taskbar_visible is True:
         # noinspection SpellCheckingInspection
         hwnds = []
         win32gui.EnumWindows(enum_handler, hwnds)
