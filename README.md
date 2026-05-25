@@ -37,6 +37,9 @@ The Preview video is set to `5 seconds delay.`
 5.Run `taskbardelay` manually or automatically using windows task scheduler. 
 
 
+6.For consistant behaviour run `Taskbar-Delay` as `Administrator`.
+
+
 ## Preview:
 
 
