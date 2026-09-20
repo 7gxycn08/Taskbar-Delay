@@ -166,12 +166,9 @@ def mouse_on_taskbar():
         user32.GetCursorPos(ctypes.byref(point))
         x, y = point.x, point.y
 
-        user32.GetSystemMetrics(0)
         screen_height = user32.GetSystemMetrics(1)
 
-        if y == screen_height - 1:
-            queue = True
-        elif screen_height - 55 < y < screen_height:
+        if y >= screen_height - 105:
             queue = True
         else:
             queue = False
@@ -255,6 +252,10 @@ class POINT(ctypes.Structure):
 
 point = POINT()
 user32 = ctypes.WinDLL('user32.dll')
+try:
+    user32.SetProcessDPIAware()
+except AttributeError:
+    pass
 # noinspection SpellCheckingInspection
 dwmapi = ctypes.WinDLL("dwmapi.dll")
 threading.Thread(target=start_keyboard_listener, daemon=True).start()
@@ -276,6 +277,7 @@ else:
     win32gui.EnumWindows(enum_handler, hwnd_s)
     for hwn_d, cl_s in hwnd_s:
         round_taskbar(hwn_d, 0)
+
 
 if __name__ == "__main__":
     hide_taskbar()
