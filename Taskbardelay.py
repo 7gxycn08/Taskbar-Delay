@@ -12,6 +12,7 @@ config.read('Config.ini')
 delay = config['MainConfig']['delay']
 fade = config.getboolean('MainConfig', 'fade_in_out')
 rounded = config.getboolean('MainConfig', 'rounded_corners')
+location = config['MainConfig']['location']
 mouse_count = 0
 #noinspection SpellCheckingInspection
 GWL_EXSTYLE = -20
@@ -162,33 +163,38 @@ def hide_taskbar():
 
 def mouse_on_taskbar():
     global user32, point, queue
+    screen_width = user32.GetSystemMetrics(0)
+    screen_height = user32.GetSystemMetrics(1)
+
     while True:
         user32.GetCursorPos(ctypes.byref(point))
         x, y = point.x, point.y
 
-        screen_height = user32.GetSystemMetrics(1)
+        if location == "top":
+            if y <= 105:
+                queue = True
+            else:
+                queue = False
 
-        if y >= screen_height - 105:
-            queue = True
-        else:
-            queue = False
+        if location == "bottom":
+            if y >= screen_height - 105:
+                queue = True
+            else:
+                queue = False
+
+        if location == "left":
+            if x <= 105:
+                queue = True
+            else:
+                queue = False
+
+        if location == "right":
+            if x >= screen_width - 105:
+                queue = True
+            else:
+                queue = False
+
         time.sleep(0.1)
-
-
-def hide_check():
-    user32.GetCursorPos(ctypes.byref(point))
-    x, y = point.x, point.y
-
-    user32.GetSystemMetrics(0)
-    screen_height = user32.GetSystemMetrics(1)
-
-    if y == screen_height - 1:
-        return True
-    elif screen_height - 55 < y < screen_height:
-        return True
-    else:
-        return False
-
 
 def start_keyboard_listener():
     with pynput.keyboard.Listener(on_press=on_win_press) as listener:
@@ -196,7 +202,7 @@ def start_keyboard_listener():
 
 
 def start():
-    global win_pressed, taskbar_visible, mouse_in_bottom_region, mouse_count
+    global win_pressed, taskbar_visible, mouse_count
     while True:
         mouse_on_q = queue
         if win_pressed:
@@ -213,22 +219,11 @@ def start():
             mouse_count += 1
             if mouse_count == 3:
                 show_taskbar()
-                mouse_in_bottom_region = True
                 taskbar_visible = True
-            continue
-        elif mouse_in_bottom_region:
-            time.sleep(int(delay))
-            check = hide_check()
-            if not check:
-                hide_taskbar()
-                mouse_count = 0
-                mouse_in_bottom_region = False
-                taskbar_visible = False
             continue
         else:
             hide_taskbar()
             mouse_count = 0
-            mouse_in_bottom_region = False
             taskbar_visible = False
         time.sleep(0.1)
 
@@ -259,7 +254,7 @@ except AttributeError:
 # noinspection SpellCheckingInspection
 dwmapi = ctypes.WinDLL("dwmapi.dll")
 threading.Thread(target=start_keyboard_listener, daemon=True).start()
-mouse_in_bottom_region = False
+# mouse_in_bottom_region = False
 taskbar_visible = True
 queue = None
 threading.Thread(target=lambda: mouse_on_taskbar(), daemon=True).start()
