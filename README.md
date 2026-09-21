@@ -14,6 +14,9 @@ Replace Windows 11 Taskbar Auto-hide.
 3.To adjust how long the task bar will be visible before hiding edit `Config.ini delay value` and set it to the desired value in seconds.
 
 
+4.Supports different positioned taskbars can be configured by editing `Config.ini location value (top,bottom,left,right)`
+
+
 The Preview video is set to `5 seconds delay.`
 
 
