@@ -202,7 +202,7 @@ def start_keyboard_listener():
 
 
 def start():
-    global win_pressed, taskbar_visible, mouse_count
+    global win_pressed, taskbar_visible
     while True:
         mouse_on_q = queue
         if win_pressed:
@@ -212,18 +212,16 @@ def start():
                 taskbar_visible = True
             time.sleep(int(delay))
             continue
-        elif mouse_on_q and taskbar_visible == True:
+        elif mouse_on_q and taskbar_visible:
             time.sleep(int(delay))
             continue
         elif mouse_on_q and not taskbar_visible:
-            mouse_count += 1
-            if mouse_count == 3:
-                show_taskbar()
-                taskbar_visible = True
+            show_taskbar()
+            taskbar_visible = True
+            time.sleep(int(delay))
             continue
-        else:
+        elif not mouse_on_q and taskbar_visible:
             hide_taskbar()
-            mouse_count = 0
             taskbar_visible = False
         time.sleep(0.1)
 
