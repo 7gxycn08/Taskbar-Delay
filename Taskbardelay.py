@@ -8,6 +8,7 @@ from ctypes import wintypes
 from tkinter import messagebox
 from typing import Optional
 from threading import Timer
+from pynput import mouse
 
 # --- Constants ---
 EVENT_SYSTEM_FOREGROUND = 0x0003
@@ -208,41 +209,31 @@ def on_win_press(key):
         show_taskbar()
 
 
-def mouse_on_taskbar():
+def mouse_on_taskbar(x, y, sw, sh):
     global queue
-    sw, sh = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-    while True:
-        user32.GetCursorPos(ctypes.byref(point))
-        x, y = point.x, point.y
-        with state_lock:
-            if (location == "top" and y <= 105) or \
-                    (location == "bottom" and y >= sh - 105) or \
-                    (location == "left" and x <= 105) or \
-                    (location == "right" and x >= sw - 105):
-                queue = True
-            else:
-                queue = False
-        time.sleep(0.1)
+    is_on_edge = (location == "top" and y <= 105) or \
+                 (location == "bottom" and y >= sh - 105) or \
+                 (location == "left" and x <= 105) or \
+                 (location == "right" and x >= sw - 105)
+
+    if is_on_edge != queue:
+        queue = is_on_edge
+        if queue:
+            # Use a thread so the mouse listener can return INSTANTLY
+            threading.Thread(target=show_taskbar, daemon=True).start()
+        else:
+            # Use a thread so the mouse listener can return INSTANTLY
+            threading.Thread(target=hide_taskbar, daemon=True).start()
 
 
 def start_keyboard_listener():
-    with pynput.keyboard.Listener(on_press=on_win_press) as listener:
-        listener.join()
+    with pynput.keyboard.Listener(on_press=on_win_press) as win_key_listener:
+        win_key_listener.join()
 
 
 def start():
     global queue
     while True:
-        with state_lock:
-            m_active = queue
-            v_active = is_taskbar_physically_visible()
-
-        if m_active and not v_active:
-            show_taskbar()
-        elif not m_active and v_active:
-            # This now only triggers the timer ONCE
-            hide_taskbar()
-
         time.sleep(0.1)
 
 
@@ -257,13 +248,11 @@ try:
 
     threading.Thread(target=start_event_hook, daemon=True).start()
     threading.Thread(target=start_keyboard_listener, daemon=True).start()
-    threading.Thread(target=mouse_on_taskbar, daemon=True).start()
-
     hide_taskbar()
-    start()
+    width, height = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+    listener = mouse.Listener(on_move=lambda x, y: mouse_on_taskbar(x, y, width, height))
+    listener.start()
+    listener.join()
+
 except Exception as e:
     messagebox.showerror("Taskbar-Delay Error", f"{e}")
-
-if __name__ == "__main__":
-    hide_taskbar()
-    start()
